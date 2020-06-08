@@ -1,3 +1,4 @@
+#define _DEFAULT_SOURCE
 #include <argp.h>
 #include <assert.h>
 #include <stdio.h>
@@ -6,7 +7,7 @@
 
 //#define TEMPLATES_PATH "~/.template"
 #define TEMPLATES_PATH "./.template"
-#define TEMPLATERC TEMPLATES_PATH "/.templaterc"
+#define TEMPLATERC TEMPLATES_PATH "/templaterc.sh"
 
 #define TEMPLATE_DELIMITOR '$'
 
@@ -92,18 +93,44 @@ void config_init(char *name) {
   head->key = "NAME";
   head->dat = name;
   head->next = NULL;
+
+  char buff_key[1024];
+  char buff_dat[1024];
+  char cmd[2048];
+
   while ((ch = fgetc(frc)) != EOF) {
-    if (ch == '=') {
-      struct tup_str *new_head = calloc(1, sizeof(struct tup_str));
-      assert(new_head);
-      new_head->next = head;
-      head = new_head;
-      head->key = strncpy(malloc(sizeof(i_buff + 1)), buff, i_buff);
+    if (ch == '\n') {
+      buff[i_buff] = '\0';
       i_buff = 0;
-    } else if (ch == '\n') {
-      head->dat = strncpy(malloc(sizeof(i_buff + 1)), buff, i_buff);
-      i_buff = 0;
+      // printf("%s\n", buff);
+      if (sscanf(buff, " %[a-zA-Z0-9_] = %[^\n]", buff_key, buff_dat)) { // ok
+        // printf("KEY : %s \nDAT : %s \n", buff_key, buff_dat);
+        // Apply bash code on temp var
+        char buff_out[1024];
+        size_t i_buff_out = 0;
+        sprintf(cmd, "temp=%s && echo $temp", buff_dat);
+        FILE *fp = popen(cmd, "r");
+        while ((ch = fgetc(fp)) != EOF) {
+          if (ch == '\n')
+            break;
+          buff_out[i_buff_out++] = ch;
+        }
+        buff_out[i_buff_out++] = '\0';
+        fclose(fp);
+        // printf("OUT : %s\n", buff_out);
+        // Create new node
+        struct tup_str *new_head = calloc(1, sizeof(struct tup_str));
+        assert(new_head);
+        new_head->next = head;
+        head = new_head;
+        // add data
+        head->key = strncpy(malloc(sizeof(strlen(buff_key) + 1)), buff_key,
+                            strlen(buff_key) + 1);
+        head->dat =
+            strncpy(malloc(sizeof(strlen(buff_out) + 1)), buff_out, i_buff_out);
+      }
     } else {
+
       assert(i_buff < buff_size);
       buff[i_buff++] = ch;
     }
