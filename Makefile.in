@@ -1,3 +1,4 @@
+APPNAME = template
 SRCDIR = src
 INCDIR = include
 OBJDIR = obj
@@ -8,7 +9,7 @@ CC = gcc
 CFLAGS = -Wall -Wextra -pedantic -std=c99
 LDFLAGS = -lm
 
-EXEC = $(OUTDIR)/template
+EXEC = $(OUTDIR)/$(APPNAME)
 
 SRC = $(shell find $(SRCDIR) -type f -name *.c)
 OBJ=$(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(SRC))
@@ -30,3 +31,14 @@ clean:
 	rm -rf $(OBJDIR)
 
 .PHONY: all clean
+
+# Installation
+
+.PHONY: install
+install: $(EXEC)
+	mkdir -p $(DESTDIR)$(PREFIX)/bin
+	cp $< $(DESTDIR)$(PREFIX)/bin/$(APPNAME)
+
+.PHONY: uninstall
+uninstall:
+	rm -f $(DESTDIR)$(PREFIX)/bin/$(APPNAME)

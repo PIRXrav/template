@@ -5,11 +5,23 @@
 #include <stdlib.h>
 #include <string.h>
 
-//#define TEMPLATES_PATH "~/.template"
-#define TEMPLATES_PATH "./.template"
-#define TEMPLATERC TEMPLATES_PATH "/templaterc.sh"
-
 #define TEMPLATE_DELIMITOR '$'
+
+/***************** PATH ********************/
+
+#define TEMPLATES_PATH_FROM_HOME ".template"
+#define TEMPLATERC "templaterc.sh"
+
+#define PATH_BUFFER_SIZE 1024
+char template_path[PATH_BUFFER_SIZE];
+char templaterc[PATH_BUFFER_SIZE];
+
+void calc_path(void) {
+  assert(snprintf(template_path, PATH_BUFFER_SIZE,
+                  "%s/" TEMPLATES_PATH_FROM_HOME, getenv("HOME")));
+  assert(
+      snprintf(templaterc, PATH_BUFFER_SIZE, "%s/" TEMPLATERC, template_path));
+}
 
 /***************** ARGUMENTS ********************/
 
@@ -80,7 +92,7 @@ struct tup_str {
 struct tup_str *head = NULL;
 
 void config_init(char *name) {
-  FILE *frc = fopen(TEMPLATERC, "r");
+  FILE *frc = fopen(templaterc, "r");
   if (!frc) {
     perror("No template configuration file : " TEMPLATERC "\n");
     exit(1);
@@ -144,7 +156,7 @@ char *config_get(char *key) {
       return cur->dat;
     }
   }
-  return "UNDEFINED IN " TEMPLATERC;
+  return "UNDEFINED IN" TEMPLATERC;
 }
 
 /***************** EDITOR ********************/
@@ -152,9 +164,9 @@ char *config_get(char *key) {
 
 void editor_create(size_t type, char *format, char *name) {
   char inname[1024];
-  sprintf(inname, TEMPLATES_PATH "/%ld.%s", type, format);
+  assert(snprintf(inname, 1024, "%s/%ld.%s", template_path, type, format));
   char outname[1024];
-  sprintf(outname, "./%s.%s", name, format);
+  assert(snprintf(outname, 1024, "./%s.%s", name, format));
   /*
   printf("INPUT  : %s\n", inname);
   printf("OUTPUT : %s\n", outname);
@@ -210,14 +222,18 @@ int main(int argc, char **argv) {
   arguments.verbose = 0;
   arguments.format = "c";
   arguments.type = 0;
-
   static struct argp argp = {options, parse_opt, args_doc, doc, 0, 0, 0};
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
-
   if (arguments.verbose) {
     printf("namefile %s\n", arguments.namefile);
     printf("verbose  %s\n", arguments.verbose ? "True" : "False");
     printf("template %ld.%s\n", arguments.type, arguments.format);
+  }
+
+  calc_path();
+  if (arguments.verbose) {
+    printf("PATH : %s\n", template_path);
+    printf("rc.sh: %s\n", templaterc);
   }
 
   config_init(arguments.namefile);
