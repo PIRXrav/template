@@ -15,6 +15,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /*******************************************************************************
  * Macros
@@ -39,30 +40,36 @@
  ******************************************************************************/
 
 // Parse type.file and gen outfile.file
-void EDITOR_Create(size_t type, char *format, char *name) {
-  char inname[1024];
-  assert(snprintf(inname, 1024, "%s/%ld.%s", template_path, type, format));
-  char outname[1024];
-  assert(snprintf(outname, 1024, "./%s.%s", name, format));
-  /*
-  printf("INPUT  : %s\n", inname);
-  printf("OUTPUT : %s\n", outname);
-*/
-  FILE *fin = fopen(inname, "r");
+void EDITOR_Create(char *type, char *format, char *outpath) {
+  char *inpath =
+      malloc(strlen(template_path) + strlen(type) + strlen(format) + 2 + 1);
+  sprintf(inpath, "%s/%s.%s", template_path, type, format);
+
+  // printf("INPUT PATH  : %s\n", inpath);
+  // printf("OUTPUT PATH : %s\n", outpath);
+
+  // Set in FILE*
+  FILE *fin = fopen(inpath, "r");
   if (!fin) {
-    fprintf(stderr, "No template %s\n", inname);
+    fprintf(stderr, "No template %s\n", inpath);
     exit(1);
   }
-  // Test out file
-  FILE *fout = fopen(outname, "r");
+  free(inpath);
+
+  // Set out FILE*
+  FILE *fout = fopen(outpath, "r");
   if (fout) { // Existing
     fclose(fout);
-    fprintf(stderr, "Existing file %s\n", outname);
+    fprintf(stderr, "Existing file %s\n", outpath);
     exit(1);
   }
-  fout = fopen(outname, "w");
-  assert(fout);
+  fout = fopen(outpath, "w");
+  if (!fout) {
+    fprintf(stderr, "Inpossible to create %s\n", outpath);
+    exit(1);
+  }
 
+  // Cpy in >(w/RC) out
   const size_t buff_size = 255;
   char buff[buff_size];
   size_t i_buff = 0;
@@ -87,6 +94,7 @@ void EDITOR_Create(size_t type, char *format, char *name) {
       }
     }
   }
+
   fclose(fin);
   fclose(fout);
 }

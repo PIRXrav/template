@@ -22,10 +22,12 @@
 
 /* Used by main to communicate with parse_opt. */
 struct arguments {
-  char *namefile; /* NAME */
+  char *pathfile; /* ex: "src/" */
+  char *namefile; /* "NAME" */
+  char *format;   /* ex ".py" */
+
   int verbose;
-  char *format;
-  long type;
+  char *type; /* Template name */
 };
 
 /*******************************************************************************
@@ -37,5 +39,6 @@ struct arguments {
  ******************************************************************************/
 
 struct arguments *ARGS_Parse(int argc, char **argv);
+void ARGS_Free(void);
 
 #endif /* _args_H_ */

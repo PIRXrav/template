@@ -17,7 +17,7 @@ A simple generator to create custom template files for any application
 ### Exemple
 
 ```
-	template -f c -t 0 -v kernel
+	template src/kernel.c
 ```
 
 ### Configuration of templates

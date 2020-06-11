@@ -30,6 +30,6 @@
  * Prototypes
  ******************************************************************************/
 
-void EDITOR_Create(size_t type, char *format, char *name);
+void EDITOR_Create(char *type, char *format, char *outpath);
 
 #endif /* _editor_H_ */
